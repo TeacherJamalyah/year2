@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Year 2 English Adventure & GitHub Exporter</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#fffbeb',
+                            100: '#fef3c7',
+                            400: '#fbbf24',
+                            500: '#f59e0b',
+                            600: '#d97706',
+                        }
+                    },
+                    fontFamily: {
+                        fredoka: ['Fredoka', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Fredoka', cursive, sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .bounce-btn {
+            transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.15s ease;
+        }
+        .bounce-btn:active {
+            transform: scale(0.92);
+        }
+        .bounce-btn:hover {
+            transform: translateY(-3px) scale(1.02);
+        }
+
+        .star-glow {
+            filter: drop-shadow(0 0 8px #f59e0b);
+        }
+
+        .card-pop {
+            animation: pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes pop {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .float-anim {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-amber-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 flex flex-col justify-between transition-colors duration-300">
+
+    <!-- TOP HEADER / NAV -->
+    <header class="sticky top-0 z-40 w-full bg-white/90 dark:bg-slate-800/90 backdrop-blur-md border-b-4 border-amber-300 dark:border-amber-600 px-4 py-3 shadow-md">
+        <div class="max-w-5xl mx-auto flex justify-between items-center">
+            <!-- Logo / Home Button -->
+            <div onclick="showSection('hub')" class="flex items-center gap-3 cursor-pointer group">
+                <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-400 to-yellow-300 flex items-center justify-center text-2xl shadow-lg border-2 border-white group-hover:rotate-6 transition-transform">
+                    🚀
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-base sm:text-xl text-amber-600 dark:text-amber-400 leading-none">English Year 2</h1>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 font-bold">Super Minds Hub & GitHub Ready</p>
+                </div>
+            </div>
+
+            <!-- Score & Utilities -->
+            <div class="flex items-center gap-2 sm:gap-3">
+                <!-- GitHub Export Button -->
+                <button onclick="openGithubModal()" class="bg-indigo-500 hover:bg-indigo-600 text-white font-black px-3.5 py-2 rounded-2xl text-xs sm:text-sm flex items-center gap-2 shadow-md bounce-btn border-b-4 border-indigo-700">
+                    <i class="fa-brands fa-github text-base"></i> <span class="hidden sm:inline">Export to</span> GitHub
+                </button>
+
+                <!-- Stars Badge -->
+                <div class="bg-amber-100 dark:bg-amber-950/80 border-2 border-amber-400 text-amber-800 dark:text-amber-300 px-3.5 py-1.5 rounded-2xl font-black text-sm flex items-center gap-2 shadow-inner">
+                    <i class="fa-solid fa-star text-amber-500 text-lg star-glow float-anim"></i>
+                    <span id="star-count">0</span>
+                </div>
+
+                <!-- Audio Toggle -->
+                <button onclick="toggleAudio()" id="audio-toggle-btn" class="w-10 h-10 rounded-2xl bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 border-2 border-slate-300 dark:border-slate-500 flex items-center justify-center text-base bounce-btn shadow">
+                    <i id="audio-icon" class="fa-solid fa-volume-high"></i>
+                </button>
+
+                <!-- Dark Mode Toggle -->
+                <button onclick="toggleDarkMode()" class="w-10 h-10 rounded-2xl bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 border-2 border-slate-300 dark:border-slate-500 flex items-center justify-center text-base bounce-btn shadow">
+                    <i id="theme-icon" class="fa-solid fa-moon"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN APP WRAPPER -->
+    <main class="max-w-5xl w-full mx-auto p-4 sm:p-6 flex-grow">
+
+        <!-- 1. LEARNING HUB / TOPIC SELECTION -->
+        <section id="sec-hub" class="space-y-6">
+            <!-- Hero Banner -->
+            <div class="bg-gradient-to-r from-amber-400 via-orange-400 to-rose-400 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden border-4 border-amber-200">
+                <div class="max-w-2xl relative z-10 space-y-2">
+                    <span class="bg-white/30 text-white font-extrabold text-xs uppercase px-3 py-1 rounded-full backdrop-blur-sm">CEFR Super Minds</span>
+                    <h2 class="text-3xl sm:text-5xl font-black drop-shadow-md">Year 2 English Quest! 📚</h2>
+                    <p class="text-amber-50 text-sm sm:text-base font-semibold">
+                        Pick a unit below to play flashcards, build sentences, and test your listening skills. Publish this game to GitHub instantly!
+                    </p>
+                </div>
+                <div class="absolute -right-6 -bottom-8 text-8xl opacity-30 select-none">
+                    ⭐
+                </div>
+            </div>
+
+            <!-- Topics Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <!-- Unit 5: Free Time -->
+                <div onclick="selectTopic('unit5')" class="bg-white dark:bg-slate-800 border-4 border-sky-300 dark:border-sky-600 rounded-3xl p-5 shadow-lg hover:shadow-2xl transition cursor-pointer bounce-btn flex items-center gap-4 group">
+                    <div class="w-20 h-20 rounded-2xl bg-sky-100 dark:bg-sky-900/60 flex items-center justify-center text-4xl shrink-0 group-hover:scale-110 transition-transform">
+                        🗓️
+                    </div>
+                    <div>
+                        <span class="bg-sky-100 text-sky-700 text-xs font-black px-2.5 py-0.5 rounded-lg">Unit 5</span>
+                        <h3 class="text-xl font-black text-slate-900 dark:text-white mt-1">Free Time</h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold mt-0.5">Days of the week & activities</p>
+                    </div>
+                </div>
+
+                <!-- Unit 6: The Old House -->
+                <div onclick="selectTopic('unit6')" class="bg-white dark:bg-slate-800 border-4 border-emerald-300 dark:border-emerald-600 rounded-3xl p-5 shadow-lg hover:shadow-2xl transition cursor-pointer bounce-btn flex items-center gap-4 group">
+                    <div class="w-20 h-20 rounded-2xl bg-emerald-100 dark:bg-emerald-900/60 flex items-center justify-center text-4xl shrink-0 group-hover:scale-110 transition-transform">
+                        🏡
+                    </div>
+                    <div>
+                        <span class="bg-emerald-100 text-emerald-700 text-xs font-black px-2.5 py-0.5 rounded-lg">Unit 6</span>
+                        <h3 class="text-xl font-black text-slate-900 dark:text-white mt-1">The Old House</h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold mt-0.5">House, furniture & prepositions</p>
+                    </div>
+                </div>
+
+                <!-- Unit 7: Get Dressed -->
+                <div onclick="selectTopic('unit7')" class="bg-white dark:bg-slate-800 border-4 border-purple-300 dark:border-purple-600 rounded-3xl p-5 shadow-lg hover:shadow-2xl transition cursor-pointer bounce-btn flex items-center gap-4 group">
+                    <div class="w-20 h-20 rounded-2xl bg-purple-100 dark:bg-purple-900/60 flex items-center justify-center text-4xl shrink-0 group-hover:scale-110 transition-transform">
+                        👕
+                    </div>
+                    <div>
+                        <span class="bg-purple-100 text-purple-700 text-xs font-black px-2.5 py-0.5 rounded-lg">Unit 7</span>
+                        <h3 class="text-xl font-black text-slate-900 dark:text-white mt-1">Get Dressed!</h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold mt-0.5">Clothes & weather outfits</p>
+                    </div>
+                </div>
+
+                <!-- Unit 8: The Robot -->
+                <div onclick="selectTopic('unit8')" class="bg-white dark:bg-slate-800 border-4 border-rose-300 dark:border-rose-600 rounded-3xl p-5 shadow-lg hover:shadow-2xl transition cursor-pointer bounce-btn flex items-center gap-4 group">
+                    <div class="w-20 h-20 rounded-2xl bg-rose-100 dark:bg-rose-900/60 flex items-center justify-center text-4xl shrink-0 group-hover:scale-110 transition-transform">
+                        🤖
+                    </div>
+                    <div>
+                        <span class="bg-rose-100 text-rose-700 text-xs font-black px-2.5 py-0.5 rounded-lg">Unit 8</span>
+                        <h3 class="text-xl font-black text-slate-900 dark:text-white mt-1">The Robot</h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold mt-0.5">Body parts & "I can / I can't"</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TOPIC DASHBOARD & MINI-GAMES MENU -->
+        <section id="sec-topic-dashboard" class="space-y-6 hidden">
+            <!-- Navigation Back -->
+            <div class="flex items-center justify-between">
+                <button onclick="showSection('hub')" class="bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 text-slate-800 dark:text-slate-100 font-extrabold px-4 py-2 rounded-2xl text-sm flex items-center gap-2 bounce-btn">
+                    <i class="fa-solid fa-arrow-left"></i> All Topics
+                </button>
+                <span id="active-topic-badge" class="bg-amber-200 dark:bg-amber-900 text-amber-800 dark:text-amber-200 font-black px-4 py-1.5 rounded-2xl text-sm border-2 border-amber-400">
+                    Unit 5: Free Time
+                </span>
+            </div>
+
+            <!-- Mini Games Selection Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+                <!-- Game 1: Talking Flashcards -->
+                <div onclick="startMiniGame('flashcards')" class="bg-white dark:bg-slate-800 border-4 border-amber-300 dark:border-amber-600 rounded-3xl p-6 text-center shadow-xl cursor-pointer bounce-btn space-y-4 flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <div class="w-20 h-20 mx-auto rounded-3xl bg-amber-100 dark:bg-amber-900/60 flex items-center justify-center text-5xl">
+                            📢
+                        </div>
+                        <h3 class="text-2xl font-black text-slate-900 dark:text-white">Talking Flashcards</h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 font-bold leading-relaxed">
+                            Listen & pronounce native English vocabulary words with audio feedback!
+                        </p>
+                    </div>
+                    <button class="w-full bg-amber-500 hover:bg-amber-600 text-white font-black py-3 rounded-2xl shadow-md border-b-4 border-amber-700">
+                        Play Flashcards! 🎴
+                    </button>
+                </div>
+
+                <!-- Game 2: Builder & Prepositions -->
+                <div onclick="startMiniGame('builder')" class="bg-white dark:bg-slate-800 border-4 border-emerald-300 dark:border-emerald-600 rounded-3xl p-6 text-center shadow-xl cursor-pointer bounce-btn space-y-4 flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <div class="w-20 h-20 mx-auto rounded-3xl bg-emerald-100 dark:bg-emerald-900/60 flex items-center justify-center text-5xl">
+                            🧩
+                        </div>
+                        <h3 class="text-2xl font-black text-slate-900 dark:text-white">Phrase & Item Builder</h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 font-bold leading-relaxed">
+                            Drag or tap words/items to complete sentences and match outfits or locations!
+                        </p>
+                    </div>
+                    <button class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black py-3 rounded-2xl shadow-md border-b-4 border-emerald-700">
+                        Start Building! 🛠️
+                    </button>
+                </div>
+
+                <!-- Game 3: Speed Listening Quiz -->
+                <div onclick="startMiniGame('quiz')" class="bg-white dark:bg-slate-800 border-4 border-indigo-300 dark:border-indigo-600 rounded-3xl p-6 text-center shadow-xl cursor-pointer bounce-btn space-y-4 flex flex-col justify-between">
+                    <div class="space-y-3">
+                        <div class="w-20 h-20 mx-auto rounded-3xl bg-indigo-100 dark:bg-indigo-900/60 flex items-center justify-center text-5xl">
+                            🎧
+                        </div>
+                        <h3 class="text-2xl font-black text-slate-900 dark:text-white">Listening Speed Quiz</h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 font-bold leading-relaxed">
+                            Listen to the secret sound prompt and pick the correct picture before time runs out!
+                        </p>
+                    </div>
+                    <button class="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-black py-3 rounded-2xl shadow-md border-b-4 border-indigo-700">
+                        Start Quiz! 🎯
+                    </button>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- MINI-GAME 1: TALKING FLASHCARDS -->
+        <section id="sec-game-flashcards" class="space-y-6 hidden">
+            <div class="flex items-center justify-between">
+                <button onclick="showSection('topic-dashboard')" class="bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-100 font-extrabold px-4 py-2 rounded-2xl text-sm flex items-center gap-2 bounce-btn">
+                    <i class="fa-solid fa-arrow-left"></i> Back
+                </button>
+                <span class="text-sm font-black text-amber-600 dark:text-amber-400">Mini-Game 1: Talking Flashcards</span>
+            </div>
+
+            <div class="bg-white dark:bg-slate-800 border-4 border-amber-300 dark:border-amber-600 rounded-3xl p-6 sm:p-8 text-center max-w-lg mx-auto shadow-2xl space-y-6 card-pop relative">
+                
+                <!-- Progress bar -->
+                <div class="w-full bg-slate-100 dark:bg-slate-700 h-3 rounded-full overflow-hidden">
+                    <div id="flashcard-progress" class="bg-amber-500 h-full w-1/4 transition-all duration-300"></div>
+                </div>
+
+                <!-- Main Card View -->
+                <div id="flashcard-content" class="space-y-4 py-4">
+                    <div id="fc-emoji" class="text-8xl sm:text-9xl float-anim select-none">
+                        ⚽
+                    </div>
+                    <h3 id="fc-word" class="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-wide">
+                        Football
+                    </h3>
+                    <p id="fc-sentence" class="text-sm font-bold text-slate-500 dark:text-slate-400 italic">
+                        "I play football on Mondays."
+                    </p>
+                </div>
+
+                <!-- Audio & Speak Controls -->
+                <div class="grid grid-cols-2 gap-3 pt-2">
+                    <button onclick="speakFlashcard()" class="bg-amber-400 hover:bg-amber-500 text-amber-950 font-black py-3.5 rounded-2xl text-base flex items-center justify-center gap-2 shadow-md bounce-btn border-b-4 border-amber-600">
+                        <i class="fa-solid fa-volume-high text-xl"></i> Listen Audio
+                    </button>
+                    <button onclick="nextFlashcard()" class="bg-slate-800 hover:bg-slate-900 text-white font-black py-3.5 rounded-2xl text-base flex items-center justify-center gap-2 shadow-md bounce-btn border-b-4 border-black">
+                        Next Word <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- MINI-GAME 2: PHRASE & ITEM BUILDER -->
+        <section id="sec-game-builder" class="space-y-6 hidden">
+            <div class="flex items-center justify-between">
+                <button onclick="showSection('topic-dashboard')" class="bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-100 font-extrabold px-4 py-2 rounded-2xl text-sm flex items-center gap-2 bounce-btn">
+                    <i class="fa-solid fa-arrow-left"></i> Back
+                </button>
+                <span class="text-sm font-black text-emerald-600 dark:text-emerald-400">Mini-Game 2: Phrase & Item Builder</span>
+            </div>
+
+            <div class="bg-white dark:bg-slate-800 border-4 border-emerald-300 dark:border-emerald-600 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6">
+                <!-- Task Prompt Header -->
+                <div class="text-center space-y-1">
+                    <span class="bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-black text-xs px-3 py-1 rounded-full uppercase">Interactive Task</span>
+                    <h3 id="builder-task-title" class="text-2xl font-black text-slate-900 dark:text-white">
+                        Build the Sentence!
+                    </h3>
+                    <p id="builder-task-sub" class="text-xs text-slate-500 font-semibold">
+                        Tap the word blocks in the right order to complete the sentence.
+                    </p>
+                </div>
+
+                <!-- Dropzone / Selected Blocks Box -->
+                <div id="builder-dropzone" class="min-h-[90px] bg-emerald-50 dark:bg-slate-900 border-3 border-dashed border-emerald-300 dark:border-emerald-700 rounded-2xl p-4 flex flex-wrap items-center justify-center gap-2.5 transition">
+                    <span class="text-xs text-emerald-400 font-bold select-none">Tap options below to place here...</span>
+                </div>
+
+                <!-- Choice Options Container -->
+                <div id="builder-choices" class="flex flex-wrap items-center justify-center gap-2.5 pt-2">
+                    <!-- Dynamic Blocks Generated by JS -->
+                </div>
+
+                <!-- Controls -->
+                <div class="flex items-center justify-center gap-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+                    <button onclick="checkBuilderAnswer()" class="bg-emerald-500 hover:bg-emerald-600 text-white font-black px-8 py-3.5 rounded-2xl text-base shadow-lg border-b-4 border-emerald-700 bounce-btn">
+                        Check Answer! ✅
+                    </button>
+                    <button onclick="resetBuilderZone()" class="bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 text-slate-700 dark:text-slate-200 font-extrabold px-5 py-3.5 rounded-2xl text-sm bounce-btn">
+                        Reset 🔄
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- MINI-GAME 3: SPEED LISTENING QUIZ -->
+        <section id="sec-game-quiz" class="space-y-6 hidden">
+            <div class="flex items-center justify-between">
+                <button onclick="showSection('topic-dashboard')" class="bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-100 font-extrabold px-4 py-2 rounded-2xl text-sm flex items-center gap-2 bounce-btn">
+                    <i class="fa-solid fa-arrow-left"></i> Back
+                </button>
+                <div class="flex items-center gap-2">
+                    <span class="text-sm font-black text-indigo-600 dark:text-indigo-400">Listening Speed Quiz</span>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-slate-800 border-4 border-indigo-300 dark:border-indigo-600 rounded-3xl p-6 sm:p-8 shadow-2xl max-w-xl mx-auto space-y-6 text-center card-pop">
+                <!-- Question counter -->
+                <div class="flex justify-between items-center text-xs font-black text-slate-400">
+                    <span id="quiz-progress-lbl">Question 1 of 5</span>
+                    <span id="quiz-score-lbl" class="text-indigo-500">Score: 0</span>
+                </div>
+
+                <!-- Audio Play Button -->
+                <div class="space-y-3 py-2">
+                    <button onclick="playQuizSoundPrompt()" class="w-24 h-24 mx-auto rounded-3xl bg-indigo-500 hover:bg-indigo-600 text-white flex items-center justify-center text-4xl shadow-xl bounce-btn border-b-4 border-indigo-800 animate-pulse">
+                        <i class="fa-solid fa-volume-high"></i>
+                    </button>
+                    <p class="text-xs font-bold text-slate-500 dark:text-slate-400">Tap speaker to listen to the target word!</p>
+                </div>
+
+                <!-- Options Grid -->
+                <div id="quiz-options-grid" class="grid grid-cols-2 gap-4 pt-2">
+                    <!-- Dynamic Answer Options -->
+                </div>
+            </div>
+        </section>
+
+        <!-- GITHUB EXPORT MODAL / HELPER PANEL -->
+        <div id="github-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
+            <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 sm:p-8 max-w-2xl w-full text-left shadow-2xl border-4 border-indigo-400 dark:border-indigo-500 space-y-6 card-pop max-h-[90vh] overflow-y-auto">
+                
+                <!-- Modal Header -->
+                <div class="flex items-center justify-between border-b pb-4 dark:border-slate-700">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 rounded-2xl bg-indigo-100 dark:bg-indigo-900/60 flex items-center justify-center text-2xl text-indigo-600 dark:text-indigo-300">
+                            <i class="fa-brands fa-github"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-black text-slate-900 dark:text-white">GitHub Pages Export Guide</h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 font-semibold">Publish your game to the web for free in 2 minutes!</p>
+                        </div>
+                    </div>
+                    <button onclick="closeGithubModal()" class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 text-slate-600 dark:text-slate-300 flex items-center justify-center font-bold">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <!-- Step-by-Step Instructions -->
+                <div class="space-y-4 text-xs sm:text-sm text-slate-700 dark:text-slate-300 font-semibold leading-relaxed">
+                    <div class="bg-indigo-50 dark:bg-slate-900 p-4 rounded-2xl border-2 border-indigo-200 dark:border-slate-700 space-y-2">
+                        <h4 class="font-black text-indigo-700 dark:text-indigo-300 text-sm flex items-center gap-2">
+                            <i class="fa-solid fa-circle-1"></i> Langkah 1: Salin Kod (Copy Code)
+                        </h4>
+                        <p>Tekan butang <span class="bg-indigo-200 dark:bg-indigo-900 px-2 py-0.5 rounded font-mono text-xs">Copy Complete HTML Code</span> di bawah untuk menyalin keseluruhan kod permainan ini ke dalam papan klip (*clipboard* anda).</p>
+                    </div>
+
+                    <div class="bg-indigo-50 dark:bg-slate-900 p-4 rounded-2xl border-2 border-indigo-200 dark:border-slate-700 space-y-2">
+                        <h4 class="font-black text-indigo-700 dark:text-indigo-300 text-sm flex items-center gap-2">
+                            <i class="fa-solid fa-circle-2"></i> Langkah 2: Buat Repositori di GitHub
+                        </h4>
+                        <ol class="list-decimal list-inside space-y-1 pl-1">
+                            <li>Buka <a href="https://github.com" target="_blank" class="text-indigo-600 dark:text-indigo-400 underline font-bold">github.com</a> dan log masuk.</li>
+                            <li>Tekan ikon <strong>"+"</strong> di penjuru kanan atas lalu pilih <strong>"New repository"</strong>.</li>
+                            <li>Namakan repositori (contoh: <code class="bg-slate-200 dark:bg-slate-800 px-1.5 py-0.5 rounded">year2-english-game</code>).</li>
+                            <li>Pilih tetapan <strong>Public</strong> dan tandakan kotak <strong>"Add a README file"</strong>, kemudian tekan <strong>Create repository</strong>.</li>
+                        </ol>
+                    </div>
+
+                    <div class="bg-indigo-50 dark:bg-slate-900 p-4 rounded-2xl border-2 border-indigo-200 dark:border-slate-700 space-y-2">
+                        <h4 class="font-black text-indigo-700 dark:text-indigo-300 text-sm flex items-center gap-2">
+                            <i class="fa-solid fa-circle-3"></i> Langkah 3: Tambah Fail <code class="text-xs">index.html</code>
+                        </h4>
+                        <ol class="list-decimal list-inside space-y-1 pl-1">
+                            <li>Di dalam repositori anda, tekan butang <strong>Add file</strong> > <strong>Create new file</strong>.</li>
+                            <li>Namakan fail sebagai <code class="bg-slate-200 dark:bg-slate-800 px-1.5 py-0.5 rounded font-mono">index.html</code>.</li>
+                            <li>Tampal (*paste*) kod yang disalin tadi ke dalam ruang editor fail tersebut.</li>
+                            <li>Tekan butang hijau <strong>Commit changes...</strong> di penjuru atas kanan.</li>
+                        </ol>
+                    </div>
+
+                    <div class="bg-indigo-50 dark:bg-slate-900 p-4 rounded-2xl border-2 border-indigo-200 dark:border-slate-700 space-y-2">
+                        <h4 class="font-black text-indigo-700 dark:text-indigo-300 text-sm flex items-center gap-2">
+                            <i class="fa-solid fa-circle-4"></i> Langkah 4: Aktifkan GitHub Pages
+                        </h4>
+                        <ol class="list-decimal list-inside space-y-1 pl-1">
+                            <li>Pergi ke tab <strong>Settings</strong> di bahagian atas repositori anda.</li>
+                            <li>Di menu sebelah kiri, klik pada <strong>Pages</strong>.</li>
+                            <li>Di bahagian <em>Branch</em>, tukar daripada <em>None</em> kepada <strong>main</strong> (atau <strong>master</strong>), kemudian klik <strong>Save</strong>.</li>
+                            <li>Tunggu selama 1 minit. Pautan (*link*) permainan anda akan dipaparkan di bahagian atas halaman Pages tersebut!</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                    <button onclick="copyFullSourceCode()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-black py-3.5 rounded-2xl text-sm flex items-center justify-center gap-2 shadow-lg bounce-btn border-b-4 border-indigo-900">
+                        <i class="fa-solid fa-copy text-lg"></i> Copy Complete HTML Code
+                    </button>
+                    <button onclick="closeGithubModal()" class="bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 text-slate-700 dark:text-slate-200 font-extrabold py-3.5 rounded-2xl text-sm bounce-btn">
+                        Tutup (Close)
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- WIN & CELEBRATION MODAL -->
+        <div id="reward-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
+            <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 sm:p-8 max-w-md w-full text-center shadow-2xl border-4 border-amber-400 dark:border-amber-500 space-y-5 card-pop">
+                <div class="text-7xl float-anim">🏆</div>
+                <div class="space-y-1">
+                    <h3 id="modal-title" class="text-3xl font-black text-slate-900 dark:text-white">Awesome Job!</h3>
+                    <p id="modal-subtitle" class="text-xs text-slate-500 font-bold">You earned extra stars!</p>
+                </div>
+
+                <!-- Stars Row -->
+                <div id="modal-stars" class="flex justify-center gap-2 text-4xl text-amber-400">
+                    <i class="fa-solid fa-star star-glow"></i>
+                    <i class="fa-solid fa-star star-glow"></i>
+                    <i class="fa-solid fa-star star-glow"></i>
+                </div>
+
+                <!-- Badge Reward Container -->
+                <div class="bg-amber-50 dark:bg-slate-900/80 p-4 rounded-2xl border-2 border-amber-200 dark:border-slate-700 flex items-center justify-center gap-3">
+                    <span id="modal-badge-icon" class="text-4xl">🌟</span>
+                    <div class="text-left">
+                        <div id="modal-badge-title" class="font-black text-sm text-amber-900 dark:text-amber-300">Word Master Badge</div>
+                        <div class="text-xs text-slate-500">Unlocked for completing unit activities!</div>
+                    </div>
+                </div>
+
+                <button onclick="closeRewardModal()" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-black py-3.5 rounded-2xl text-base shadow-lg border-b-4 border-amber-700 bounce-btn">
+                    Continue Adventure! 🚀
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="py-4 text-center text-xs font-bold text-slate-400 border-t border-slate-200 dark:border-slate-800">
+        Super Minds Year 2 Primary English Activity Hub • GitHub Pages Ready
+    </footer>
+
+    <!-- LOGIC & DATA ENGINE -->
+    <script>
+        // --- DATA STRUCTURE FOR SUPER MINDS YEAR 2 UNITS ---
+        const UNITS_DATA = {
+            unit5: {
+                id: 'unit5',
+                name: 'Unit 5: Free Time',
+                flashcards: [
+                    { emoji: '🗓️', word: 'Monday', sentence: 'I play football on Mondays.' },
+                    { emoji: '🏊', word: 'Swimming', sentence: 'I go swimming on Tuesdays.' },
+                    { emoji: '🎨', word: 'Painting', sentence: 'I paint pictures on Wednesdays.' },
+                    { emoji: '🚲', word: 'Bike Riding', sentence: 'I ride my bike on Thursdays.' },
+                    { emoji: '📖', word: 'Reading', sentence: 'I read books on Fridays.' },
+                    { emoji: '📺', word: 'TV', sentence: 'I watch TV on Saturdays.' },
+                    { emoji: '🪁', word: 'Kite', sentence: 'I fly a kite on Sundays.' }
+                ],
+                builderTasks: [
+                    {
+                        title: 'Order the Days of the Week!',
+                        sub: 'Tap the days in correct calendar order starting from Monday.',
+                        correct: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+                        shuffled: ['Wednesday', 'Monday', 'Friday', 'Tuesday', 'Thursday']
+                    },
+                    {
+                        title: 'Complete the Sentence!',
+                        sub: 'What do you do on Sunday?',
+                        correct: ['I', 'fly', 'a', 'kite', 'on', 'Sunday.'],
+                        shuffled: ['a', 'kite', 'I', 'Sunday.', 'on', 'fly']
+                    }
+                ],
+                quizQuestions: [
+                    { word: 'Monday', audioPrompt: 'Monday', options: [{ emoji: '🗓️', text: 'Monday' }, { emoji: '🚲', text: 'Bike Riding' }, { emoji: '🎨', text: 'Painting' }, { emoji: '📺', text: 'TV' }], correctIndex: 0 },
+                    { word: 'Swimming', audioPrompt: 'Swimming', options: [{ emoji: '📖', text: 'Reading' }, { emoji: '🏊', text: 'Swimming' }, { emoji: '🪁', text: 'Kite' }, { emoji: '🗓️', text: 'Monday' }], correctIndex: 1 },
+                    { word: 'Kite', audioPrompt: 'Kite', options: [{ emoji: '🚲', text: 'Bike Riding' }, { emoji: '🎨', text: 'Painting' }, { emoji: '🪁', text: 'Kite' }, { emoji: '📺', text: 'TV' }], correctIndex: 2 }
+                ]
+            },
+            unit6: {
+                id: 'unit6',
+                name: 'Unit 6: The Old House',
+                flashcards: [
+                    { emoji: '🛋️', word: 'Sofa', sentence: 'The cat is on the sofa.' },
+                    { emoji: '🛏️', word: 'Bed', sentence: 'The pillow is on the bed.' },
+                    { emoji: '🚪', word: 'Door', sentence: 'Open the bedroom door.' },
+                    { emoji: '📦', word: 'Box', sentence: 'The toy is in the box.' },
+                    { emoji: '🪑', word: 'Chair', sentence: 'The mouse is under the chair.' },
+                    { emoji: '🛁', word: 'Bathroom', sentence: 'We wash in the bathroom.' }
+                ],
+                builderTasks: [
+                    {
+                        title: 'Where is the Monster?',
+                        sub: 'Build sentence describing the monster location.',
+                        correct: ['The', 'monster', 'is', 'under', 'the', 'bed.'],
+                        shuffled: ['under', 'monster', 'bed.', 'The', 'the', 'is']
+                    },
+                    {
+                        title: 'In, On or Under?',
+                        sub: 'Place items in the correct order.',
+                        correct: ['The', 'cat', 'is', 'on', 'the', 'sofa.'],
+                        shuffled: ['on', 'is', 'cat', 'the', 'sofa.', 'The']
+                    }
+                ],
+                quizQuestions: [
+                    { word: 'Sofa', audioPrompt: 'Sofa', options: [{ emoji: '🛋️', text: 'Sofa' }, { emoji: '🚪', text: 'Door' }, { emoji: '🛁', text: 'Bathroom' }, { emoji: '🛏️', text: 'Bed' }], correctIndex: 0 },
+                    { word: 'Under', audioPrompt: 'Under the chair', options: [{ emoji: '📦', text: 'Box' }, { emoji: '🪑', text: 'Under Chair' }, { emoji: '🛋️', text: 'Sofa' }, { emoji: '🚪', text: 'Door' }], correctIndex: 1 }
+                ]
+            },
+            unit7: {
+                id: 'unit7',
+                name: 'Unit 7: Get Dressed!',
+                flashcards: [
+                    { emoji: '👕', word: 'T-shirt', sentence: 'I wear a blue T-shirt.' },
+                    { emoji: '👖', word: 'Trousers', sentence: 'Put on your green trousers.' },
+                    { emoji: '👟', word: 'Shoes', sentence: 'Tie your shoes nicely.' },
+                    { emoji: '🧢', word: 'Cap', sentence: 'Wear a cap when it is sunny.' },
+                    { emoji: '🌧️', word: 'Rainy', sentence: 'It is rainy today.' },
+                    { emoji: '☀️', word: 'Sunny', sentence: 'It is sunny and warm.' }
+                ],
+                builderTasks: [
+                    {
+                        title: 'Match Outfit to Weather!',
+                        sub: 'What do you wear when it is sunny?',
+                        correct: ['I', 'wear', 'a', 'cap', 'when', 'it', 'is', 'sunny.'],
+                        shuffled: ['sunny.', 'cap', 'I', 'when', 'a', 'wear', 'is', 'it']
+                    }
+                ],
+                quizQuestions: [
+                    { word: 'T-shirt', audioPrompt: 'T-shirt', options: [{ emoji: '👕', text: 'T-shirt' }, { emoji: '👖', text: 'Trousers' }, { emoji: '🧢', text: 'Cap' }, { emoji: '🌧️', text: 'Rainy' }], correctIndex: 0 },
+                    { word: 'Sunny', audioPrompt: 'Sunny weather', options: [{ emoji: '🌧️', text: 'Rainy' }, { emoji: '☀️', text: 'Sunny' }, { emoji: '👟', text: 'Shoes' }, { emoji: '👖', text: 'Trousers' }], correctIndex: 1 }
+                ]
+            },
+            unit8: {
+                id: 'unit8',
+                name: 'Unit 8: The Robot',
+                flashcards: [
+                    { emoji: '🤖', word: 'Robot', sentence: 'The robot can stand on one leg.' },
+                    { emoji: '👂', word: 'Ears', sentence: 'I hear with my ears.' },
+                    { emoji: '👀', word: 'Eyes', sentence: 'I see with my eyes.' },
+                    { emoji: '🦵', word: 'Legs', sentence: 'Touch your legs.' },
+                    { emoji: '⚽', word: 'Kick', sentence: 'I can kick a ball.' },
+                    { emoji: '🤸', word: 'Skip', sentence: 'I can skip fast.' }
+                ],
+                builderTasks: [
+                    {
+                        title: 'Robot Abilities!',
+                        sub: 'Build the ability statement.',
+                        correct: ['I', 'can', 'touch', 'my', 'toes.'],
+                        shuffled: ['touch', 'can', 'my', 'I', 'toes.']
+                    }
+                ],
+                quizQuestions: [
+                    { word: 'Robot', audioPrompt: 'Robot', options: [{ emoji: '🤖', text: 'Robot' }, { emoji: '👂', text: 'Ears' }, { emoji: '👀', text: 'Eyes' }, { emoji: '🦵', text: 'Legs' }], correctIndex: 0 },
+                    { word: 'Kick', audioPrompt: 'I can kick a ball', options: [{ emoji: '🤸', text: 'Skip' }, { emoji: '⚽', text: 'Kick' }, { emoji: '👂', text: 'Ears' }, { emoji: '🤖', text: 'Robot' }], correctIndex: 1 }
+                ]
+            }
+        };
+
+        // --- APP STATE ---
+        let currentTopicKey = 'unit5';
+        let currentStars = 0;
+        let audioEnabled = true;
+
+        // Flashcard State
+        let fcIndex = 0;
+
+        // Builder State
+        let builderTaskIndex = 0;
+        let selectedBuilderBlocks = [];
+
+        // Quiz State
+        let quizQuestionIndex = 0;
+        let quizScore = 0;
+
+        // --- NAVIGATION ---
+        function showSection(secId) {
+            playSound('click');
+            const sections = ['hub', 'topic-dashboard', 'game-flashcards', 'game-builder', 'game-quiz'];
+            sections.forEach(s => {
+                const el = document.getElementById(`sec-${s}`);
+                if (el) el.classList.add('hidden');
+            });
+            const target = document.getElementById(`sec-${secId}`);
+            if (target) target.classList.remove('hidden');
+        }
+
+        function selectTopic(unitKey) {
+            currentTopicKey = unitKey;
+            const topic = UNITS_DATA[unitKey];
+            document.getElementById('active-topic-badge').innerText = topic.name;
+            showSection('topic-dashboard');
+        }
+
+        function startMiniGame(gameType) {
+            if (gameType === 'flashcards') {
+                fcIndex = 0;
+                renderFlashcard();
+                showSection('game-flashcards');
+            } else if (gameType === 'builder') {
+                builderTaskIndex = 0;
+                loadBuilderTask();
+                showSection('game-builder');
+            } else if (gameType === 'quiz') {
+                quizQuestionIndex = 0;
+                quizScore = 0;
+                loadQuizQuestion();
+                showSection('game-quiz');
+            }
+        }
+
+        // --- GITHUB MODAL CONTROLS ---
+        function openGithubModal() {
+            playSound('click');
+            document.getElementById('github-modal').classList.remove('hidden');
+        }
+
+        function closeGithubModal() {
+            document.getElementById('github-modal').classList.add('hidden');
+        }
+
+        function copyFullSourceCode() {
+            playSound('correct');
+            // Grabs the complete HTML document source
+            const htmlContent = document.documentElement.outerHTML;
+            
+            // Fallback clipboard method for iframe restrictions
+            const textarea = document.createElement('textarea');
+            textarea.value = htmlContent;
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                alert("Berjaya disalin! Kod lengkap permainan telah disalin ke papan klip. Kini anda boleh paste ke fail index.html di GitHub.");
+            } catch (err) {
+                alert("Sila salin kod secara manual daripada paparan editor.");
+            }
+            document.body.removeChild(textarea);
+        }
+
+        // --- MINI-GAME 1: FLASHCARDS ENGINE ---
+        function renderFlashcard() {
+            const list = UNITS_DATA[currentTopicKey].flashcards;
+            const item = list[fcIndex];
+
+            document.getElementById('fc-emoji').innerText = item.emoji;
+            document.getElementById('fc-word').innerText = item.word;
+            document.getElementById('fc-sentence').innerText = `"${item.sentence}"`;
+
+            const pct = ((fcIndex + 1) / list.length) * 100;
+            document.getElementById('flashcard-progress').style.width = `${pct}%`;
+
+            setTimeout(() => speakFlashcard(), 300);
+        }
+
+        function speakFlashcard() {
+            const item = UNITS_DATA[currentTopicKey].flashcards[fcIndex];
+            speakText(`${item.word}. ${item.sentence}`);
+        }
+
+        function nextFlashcard() {
+            playSound('click');
+            const list = UNITS_DATA[currentTopicKey].flashcards;
+            fcIndex = (fcIndex + 1) % list.length;
+            renderFlashcard();
+
+            if (fcIndex === 0) {
+                addStars(5);
+                triggerRewardModal("Flashcard Champion! 🎴", "Unlocked unit flashcard badge!", "🏅");
+            }
+        }
+
+        // --- MINI-GAME 2: BUILDER ENGINE ---
+        function loadBuilderTask() {
+            const tasks = UNITS_DATA[currentTopicKey].builderTasks;
+            const task = tasks[builderTaskIndex];
+
+            document.getElementById('builder-task-title').innerText = task.title;
+            document.getElementById('builder-task-sub').innerText = task.sub;
+
+            selectedBuilderBlocks = [];
+            renderBuilderDropzone();
+
+            const choicesContainer = document.getElementById('builder-choices');
+            choicesContainer.innerHTML = task.shuffled.map((word, idx) => `
+                <button id="b-block-${idx}" onclick="pickBuilderBlock('${word}', ${idx})" class="bg-white dark:bg-slate-700 border-3 border-slate-300 dark:border-slate-600 hover:border-emerald-400 text-slate-800 dark:text-slate-100 font-extrabold px-4 py-2.5 rounded-2xl text-sm shadow-md bounce-btn">
+                    ${word}
+                </button>
+            `).join('');
+        }
+
+        function pickBuilderBlock(word, idx) {
+            playSound('click');
+            selectedBuilderBlocks.push({ word, idx });
+            document.getElementById(`b-block-${idx}`).classList.add('opacity-30', 'pointer-events-none');
+            renderBuilderDropzone();
+        }
+
+        function renderBuilderDropzone() {
+            const dropzone = document.getElementById('builder-dropzone');
+            if (selectedBuilderBlocks.length === 0) {
+                dropzone.innerHTML = `<span class="text-xs text-emerald-400 font-bold select-none">Tap options below to place here...</span>`;
+                return;
+            }
+
+            dropzone.innerHTML = selectedBuilderBlocks.map((item, i) => `
+                <span onclick="removeBuilderBlock(${i})" class="bg-emerald-400 text-emerald-950 font-black px-3.5 py-2 rounded-2xl text-sm shadow-md cursor-pointer flex items-center gap-2 bounce-btn">
+                    ${item.word}
+                    <i class="fa-solid fa-xmark text-xs opacity-70"></i>
+                </span>
+            `).join('');
+        }
+
+        function removeBuilderBlock(index) {
+            playSound('click');
+            const removed = selectedBuilderBlocks.splice(index, 1)[0];
+            document.getElementById(`b-block-${removed.idx}`).classList.remove('opacity-30', 'pointer-events-none');
+            renderBuilderDropzone();
+        }
+
+        function resetBuilderZone() {
+            loadBuilderTask();
+        }
+
+        function checkBuilderAnswer() {
+            const tasks = UNITS_DATA[currentTopicKey].builderTasks;
+            const task = tasks[builderTaskIndex];
+
+            const built = selectedBuilderBlocks.map(b => b.word).join(' ');
+            const target = task.correct.join(' ');
+
+            if (built === target) {
+                playSound('correct');
+                addStars(10);
+                triggerConfetti();
+
+                builderTaskIndex++;
+                if (builderTaskIndex < tasks.length) {
+                    setTimeout(() => loadBuilderTask(), 800);
+                } else {
+                    triggerRewardModal("Builder Master! 🛠️", "You constructed all sentences correctly!", "🧩");
+                }
+            } else {
+                playSound('wrong');
+                speakText("Try again!");
+            }
+        }
+
+        // --- MINI-GAME 3: SPEED QUIZ ENGINE ---
+        function loadQuizQuestion() {
+            const questions = UNITS_DATA[currentTopicKey].quizQuestions;
+            const q = questions[quizQuestionIndex];
+
+            document.getElementById('quiz-progress-lbl').innerText = `Question ${quizQuestionIndex + 1} of ${questions.length}`;
+            document.getElementById('quiz-score-lbl').innerText = `Score: ${quizScore}`;
+
+            const grid = document.getElementById('quiz-options-grid');
+            grid.innerHTML = q.options.map((opt, i) => `
+                <button onclick="answerQuiz(${i})" class="bg-slate-50 dark:bg-slate-700/60 hover:bg-indigo-100 dark:hover:bg-indigo-950/60 border-3 border-slate-200 dark:border-slate-600 rounded-3xl p-4 flex flex-col items-center justify-center gap-2 bounce-btn shadow-md">
+                    <span class="text-5xl">${opt.emoji}</span>
+                    <span class="font-extrabold text-sm text-slate-800 dark:text-slate-100">${opt.text}</span>
+                </button>
+            `).join('');
+
+            setTimeout(() => playQuizSoundPrompt(), 400);
+        }
+
+        function playQuizSoundPrompt() {
+            const q = UNITS_DATA[currentTopicKey].quizQuestions[quizQuestionIndex];
+            speakText(q.audioPrompt);
+        }
+
+        function answerQuiz(selectedIndex) {
+            const q = UNITS_DATA[currentTopicKey].quizQuestions[quizQuestionIndex];
+            const questions = UNITS_DATA[currentTopicKey].quizQuestions;
+
+            if (selectedIndex === q.correctIndex) {
+                playSound('correct');
+                quizScore += 10;
+                addStars(5);
+
+                quizQuestionIndex++;
+                if (quizQuestionIndex < questions.length) {
+                    loadQuizQuestion();
+                } else {
+                    triggerRewardModal("Quiz Genius! 🎯", `Final Quiz Score: ${quizScore} pts!`, "🌟");
+                }
+            } else {
+                playSound('wrong');
+                speakText("Oops! Try again.");
+            }
+        }
+
+        // --- REWARDS & AUDIO LOGIC ---
+        function addStars(num) {
+            currentStars += num;
+            document.getElementById('star-count').innerText = currentStars;
+        }
+
+        function triggerRewardModal(title, sub, badgeIcon) {
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-subtitle').innerText = sub;
+            document.getElementById('modal-badge-icon').innerText = badgeIcon;
+
+            document.getElementById('reward-modal').classList.remove('hidden');
+            triggerConfetti();
+        }
+
+        function closeRewardModal() {
+            document.getElementById('reward-modal').classList.add('hidden');
+            showSection('topic-dashboard');
+        }
+
+        function triggerConfetti() {
+            confetti({
+                particleCount: 80,
+                spread: 70,
+                origin: { y: 0.6 }
+            });
+        }
+
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(type) {
+            if (!audioEnabled) return;
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                if (type === 'click') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(450, audioCtx.currentTime);
+                    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.06);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.06);
+                } else if (type === 'correct') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(523, audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(659, audioCtx.currentTime + 0.15);
+                    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.3);
+                } else if (type === 'wrong') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(180, audioCtx.currentTime);
+                    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.2);
+                }
+            } catch (e) {}
+        }
+
+        function speakText(text) {
+            if (!audioEnabled) return;
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = 0.85;
+                utterance.lang = 'en-US';
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        function toggleAudio() {
+            audioEnabled = !audioEnabled;
+            const icon = document.getElementById('audio-icon');
+            icon.className = audioEnabled ? "fa-solid fa-volume-high" : "fa-solid fa-volume-xmark text-rose-500";
+        }
+
+        function toggleDarkMode() {
+            const html = document.documentElement;
+            const icon = document.getElementById('theme-icon');
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                html.classList.add('light');
+                icon.className = "fa-solid fa-moon";
+            } else {
+                html.classList.remove('light');
+                html.classList.add('dark');
+                icon.className = "fa-solid fa-sun text-amber-400";
+            }
+        }
+
+        window.onload = function() {
+            showSection('hub');
+        };
+    </script>
+</body>
+</html>
